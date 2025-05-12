@@ -121,7 +121,7 @@ class FolderSize:
 # 使用示例
 if __name__ == "__main__":
     # 示例：计算当前目录大小
-    current_dir = Path(".")
+    current_dir = Path("")
 
     # 使用第一种方法计算
     size1 = FolderSize.get_folder_size_file(current_dir)

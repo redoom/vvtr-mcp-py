@@ -3,11 +3,11 @@ from pathlib import Path
 from typing import List, Optional
 import logging
 
-from mcp.server import FastMCP
+from mcp.server.fastmcp import FastMCP
 
-from cal_data.vvtr_data import VvtrData
-from util.csv_merger import CsvMerger
-from util.folder_size import FolderSize
+from src.vvtr_mcp_server.cal_data.vvtr_data import VvtrData
+from src.vvtr_mcp_server.util.csv_merger import CsvMerger
+from src.vvtr_mcp_server.util.folder_size import FolderSize
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -46,9 +46,9 @@ async def get_financial_products_data_path(type: str, name: str, symbol: str, st
 
     # 根据数据类型使用不同查找逻辑
     if name == "1d":
-        paths = CsvMerger.find_all_csv_files(root_dir, startTime, endTime)
+        paths = CsvMerger.find_all_csv_files_with_date_range(root_dir, startTime, endTime)
     else:
-        paths = CsvMerger.find_all_csv_files(root_dir, startTime, endTime, symbol)
+        paths = CsvMerger.find_all_csv_files_with_date_range_and_symbol(root_dir, startTime, endTime, symbol)
 
     # 转换为字符串列表返回
     return [str(path) for path in paths]
@@ -200,5 +200,9 @@ async def get_financial_products_tick_data(pathStrs: List[str], startTime: str, 
         "remaining_paths": [str(path) for path in result.remaining_paths]
     }
 
-if __name__ == "__main__":
+def run_server():
+    """入口函数，用于uvx启动"""
     mcp.run(transport='stdio')
+
+if __name__ == "__main__":
+    run_server()
