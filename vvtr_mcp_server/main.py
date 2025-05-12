@@ -6,6 +6,7 @@ import logging
 from mcp.server.fastmcp import FastMCP
 
 from vvtr_mcp_server.cal_data.vvtr_data import VvtrData
+from vvtr_mcp_server.start_up import initialize_folders
 from vvtr_mcp_server.util.csv_merger import CsvMerger
 from vvtr_mcp_server.util.folder_size import FolderSize
 # 配置日志
@@ -201,6 +202,7 @@ async def get_financial_products_tick_data(pathStrs: List[str], startTime: str, 
 
 def run_server():
     try:
+        initialize_folders()
         import sys
         print("启动 VVTR MCP 服务器...", file=sys.stderr)
         print(f"当前工作目录: {os.getcwd()}", file=sys.stderr)

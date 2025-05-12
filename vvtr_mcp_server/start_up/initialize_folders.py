@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 def initialize_folders():
     # 从环境变量获取基础路径，如果没有设置则使用默认值
-    base_path = os.environ.get('API_DATA_PATH', 'D:\\data')
+    base_path = os.environ.get('API_DATA_PATH', 'C:\\data')
 
     # 金融产品类型
     folders = [
@@ -39,5 +39,3 @@ def initialize_folders():
                     logger.error(f"Failed to create folder: {type_dir}. Error: {str(e)}")
             else:
                 logger.info(f"Folder already exists: {type_dir}")
-
-
