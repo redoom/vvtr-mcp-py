@@ -201,7 +201,14 @@ async def get_financial_products_tick_data(pathStrs: List[str], startTime: str, 
 
 def run_server():
     """入口函数，用于uvx启动"""
-    mcp.run(transport='stdio')
+    try:
+        import sys
+        print("启动 VVTR MCP 服务器...", file=sys.stderr)
+        mcp.run(transport='stdio')
+    except Exception as e:
+        import sys, traceback
+        print(f"服务器错误: {str(e)}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
 
 if __name__ == "__main__":
     run_server()
