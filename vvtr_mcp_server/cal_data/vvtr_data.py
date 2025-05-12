@@ -3,7 +3,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
 
-from src.vvtr_mcp_server.util.csv_merger import CsvMerger
+from vvtr_mcp_server.util.csv_merger import CsvMerger
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

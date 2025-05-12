@@ -5,10 +5,9 @@ import logging
 
 from mcp.server.fastmcp import FastMCP
 
-from src.vvtr_mcp_server.cal_data.vvtr_data import VvtrData
-from src.vvtr_mcp_server.util.csv_merger import CsvMerger
-from src.vvtr_mcp_server.util.folder_size import FolderSize
-
+from vvtr_mcp_server.cal_data.vvtr_data import VvtrData
+from vvtr_mcp_server.util.csv_merger import CsvMerger
+from vvtr_mcp_server.util.folder_size import FolderSize
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

@@ -20,4 +20,4 @@ vvtr-mcp-server = "vvtr_mcp_server.main:run_server"
 packages = ["vvtr_mcp_server"]
 
 [tool.hatch.build]
-include = ["src/vvtr_mcp_server/**"]
+include = ["vvtr_mcp_server/**"]
