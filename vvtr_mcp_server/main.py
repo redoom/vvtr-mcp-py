@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP("financial_data")
 
 # 获取API密钥
-API_KEY = os.environ["API_KEY"]
+API_KEY = os.environ.get("API_KEY", '123456')
 
 # 创建VvtrData实例
 vvtr_data = VvtrData()
@@ -27,27 +27,6 @@ vvtr_data = VvtrData()
 BASE_URL = "https://rest.vvtr.com/v1"
 
 
-def authorize(func):
-    @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
-        # 从请求中获取API密钥
-        # MCP可能在请求头或上下文中传递了API密钥
-        request_api_key = kwargs.get('api_key')
-
-        # 如果没有在参数中找到，也可以从环境变量或其他地方检查
-        if not request_api_key:
-            # 可以从请求头或其他地方获取
-            pass
-
-        # 验证API密钥
-        if not request_api_key or request_api_key != API_KEY:
-            # 返回错误信息
-            return {"error": "无效的API密钥", "status": "unauthorized"}
-
-        # 权限验证通过，执行原始函数
-        return await func(*args, **kwargs)
-
-    return wrapper
 
 @mcp.tool()
 async def get_financial_products_data_path(type: str, name: str, symbol: str, startTime: str, endTime: str) -> List[
@@ -230,6 +209,86 @@ async def get_financial_products_tick_data(pathStrs: List[str], startTime: str, 
         "remaining_paths": [str(path) for path in result.remaining_paths]
     }
 
+@mcp.tool()
+async def get_symbol_count(type: str) -> int:
+    """查询当日各品种下活跃的symbol的数量。
+
+    Args:
+        type: 要查询的资源路径,eg:"11" -> A股, "14" -> 期货, "12" -> 基金, "16" -> 指数, "21" -> 美股, "22" -> 美股期权, "31" -> 加密币
+    """
+    data = MainStationData.get_symbol(type, API_KEY)
+    return MainStationData.count_lines_in_string(data)
+
+
+@mcp.tool()
+async def get_online_symbol(type: str, start: int, end: int):
+    """查询当日各品种下活跃的symbol，每日盘前更新，需要先统计一下数量,建议一次性获取1000条。
+
+    Args:
+        type: 要查询的资源路径,eg:"11" -> A股, "14" -> 期货, "12" -> 基金, "16" -> 指数, "21" -> 美股, "22" -> 美股期权, "31" -> 加密币
+        start: 查询的起始条数
+        end: 查询的结束条数
+    """
+    data = MainStationData.get_symbol(type, API_KEY)
+    res = MainStationData.cut_data(data, start, end)
+    return res
+
+@mcp.tool()
+async def get_online_history_kline(symbols: str, interval: str, type: str,
+                          from_date: str, to_date: str, adjust: bool = False,
+                          limit: int = 2000, cursor_token: str = None) -> tuple[str | None, bool, str]:
+    """
+            获取在线数据的历史K线数据
+
+            Args:
+                symbols: 证券代码,多个代码用逗号分隔,填"*"则提交分类下的全部symbol
+                interval: 周期(如1m, 5m, 1d等)
+                type: 产品类型,eg:"11" -> A股, "14" -> 期货, "12" -> 基金, "16" -> 指数, "21" -> 美股, "22" -> 美股期权, "31" -> 加密币
+                from_date: 开始时间，若查询24H内K线时间格式用 yyyy-mm-dd HH:mm:ss
+                to_date: 结束时间，与from格式保持一致
+                adjust: 是否复权
+                limit: 单次返回的最大数量(默认2000)
+                cursor_token: 分页游标标记。当接口返回的响应中包含此字段时，表示当前数据未完全加载，
+                             需要将此值作为参数传入下一次请求以获取下一页数据。
+
+            Returns:
+                返回元组(csv_data, has_next, next_cursor_token)：
+                - csv_data: CSV格式的K线数据或None(如果请求失败)
+                - has_next: 布尔值，表示是否还有更多数据未返回
+                - next_cursor_token: 字符串，下一页的游标标记，如果没有更多数据则为空字符串''
+            """
+    return MainStationData.get_history_kline(symbols, interval, type, API_KEY, from_date, to_date, adjust, limit, cursor_token)
+
+@mcp.tool()
+async def get_online_current_kline(type: str, symbols: str = None) -> str | None:
+    """
+    在线获取最新分钟K线数据
+
+    Args:
+        type: 产品类型，可填写多个，用","分隔。各个type的权限需独立获取。
+        apikey: 您的apiKey
+        symbols: 证券代码，用","分隔，多个type的symbol用";"分隔，顺序务必与type保持一致。
+
+    Returns:
+        返回CSV格式的最新分钟K线数据或None(如果请求失败)
+    """
+    return MainStationData.get_current_kline(type, API_KEY, symbols)
+
+@mcp.tool()
+async def get_online_latest_tick(type: str, symbols: str = None) -> str | None:
+    """
+    获取最新tick数据
+
+    Args:
+        type: 产品类型，可填写多个，用","分隔。各个type的权限需独立获取。
+        apikey: 您的apiKey
+        symbols: 证券代码，用","分隔，多个type的symbol用";"分隔，顺序务必与type保持一致。
+
+    Returns:
+        返回CSV格式的最新tick数据或None(如果请求失败)
+    """
+
+    return MainStationData.get_latest_tick(type, API_KEY, symbols)
 
 def run_server():
     try:
@@ -240,12 +299,8 @@ def run_server():
         print(f"当前工作目录: {os.getcwd()}", file=sys.stderr)
         print(f"DATA_PATH: {os.environ.get('DATA_PATH')}", file=sys.stderr)
 
-        # 获取环境变量中的 API_KEY
-        api_key = os.environ.get('API_KEY')
-
-
         # 验证 API_KEY 是否合法
-        if not MainStationData.http_get(api_key):
+        if not MainStationData.http_get(API_KEY):
             print("错误：未提供 API_KEY", file=sys.stderr)
             sys.exit(1)
 
