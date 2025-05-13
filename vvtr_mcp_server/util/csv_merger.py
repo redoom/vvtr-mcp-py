@@ -6,7 +6,7 @@ from typing import List
 
 class CsvMerger:
     # 指定要扫描的目录
-    ROOT = os.environ.get("USER_DATA_PATH", ".")
+    ROOT = os.environ.get("API_DATA_PATH", "C:\\data")
     # ROOT = r"D:\\data\\"
     @staticmethod
     def main(args=None):
